@@ -1,0 +1,69 @@
+create table users
+(
+	id int auto_increment,
+	email varchar(255) not null,
+	name varchar(255) not null,
+	password varchar(255) not null,
+	constraint users_pk
+		primary key (id)
+);
+
+----------------------------------------------
+
+create table logs
+(
+    id int auto_increment,
+    action enum('create', 'update', 'delete') not null,
+    old_data json null,
+    new_data json null,
+    constraint logs_pk
+        primary key (id)
+);
+
+---------------------------------------------
+
+create trigger insert_log after insert on users
+    for each row begin
+        insert into logs set
+            action='create',
+            new_data=json_object('id', new.id, 'email', new.email, 'name', new.name, 'password', new.password);
+    end;
+
+--------------------------------------------
+
+create trigger update_log after update on users
+    for each row begin
+        insert into logs set
+            action='update',
+            old_data=json_object('id', old.id, 'email', old.email, 'name', old.name, 'password', old.password),
+            new_data=json_object('id', new.id, 'email', new.email, 'name', new.name, 'password', new.password);
+    end;
+
+--------------------------------------------
+
+create trigger delete_log after delete on users
+    for each row begin
+        insert into logs set
+            action='delete',
+            old_data=json_object('id', old.id, 'email', old.email, 'name', old.name, 'password', old.password);
+    end;
+
+---------------------------------------------
+
+insert into users set
+    email='test@gmail.com',
+    name='InsertTest',
+    password='testpassword8192581jhk';
+
+---------------------------------------------
+
+update users
+    set name='UpdateTest'
+    where id=1;
+
+---------------------------------------------
+
+delete from users
+    where id=1;
+
+---------------------------------------------
